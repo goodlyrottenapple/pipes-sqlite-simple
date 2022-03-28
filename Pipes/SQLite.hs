@@ -20,7 +20,7 @@ query_ :: (MonadSafe m, SQL.FromRow a)
         => SQL.Connection
         -> SQL.Query
         -> Producer' a m ()
-query_ conn q = bracketIO (SQL.openStatement conn q) SQL.closeStatement eachRow
+query_ conn q = bracketIO (SQL.openStatement conn q) SQL.closeStatement (\stmt -> eachRow stmt)
 
 -- | Run a query with parameters and yield each parsed row in the result.
 query :: (MonadSafe m, SQL.FromRow a, SQL.ToRow params)
@@ -28,7 +28,7 @@ query :: (MonadSafe m, SQL.FromRow a, SQL.ToRow params)
        -> SQL.Query
        -> params
        -> Producer' a m ()
-query conn q p = bracketIO open' SQL.closeStatement eachRow
+query conn q p = bracketIO open' SQL.closeStatement (\stmt -> eachRow stmt)
     where open' = do s <- SQL.openStatement conn q
                      SQL.bind s p
                      return s
@@ -39,7 +39,7 @@ queryNamed :: (MonadSafe m, SQL.FromRow a)
             -> SQL.Query
             -> [SQL.NamedParam]
             -> Producer' a m ()
-queryNamed conn q ns = bracketIO open' SQL.closeStatement eachRow
+queryNamed conn q ns = bracketIO open' SQL.closeStatement (\stmt -> eachRow stmt)
     where open' = do s <- SQL.openStatement conn q
                      SQL.bindNamed s ns
                      return s
